@@ -27,7 +27,7 @@ def validate_args(parser, args):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Build or print an image label over PT-P710BT RFCOMM.")
+    parser = argparse.ArgumentParser(description="Print an image label to your Brother P-touch over Bluetooth on Linux.")
     parser.add_argument("image")
     parser.add_argument("--device", default=DEFAULT_CONFIG.device)
     parser.add_argument("--address", default=DEFAULT_CONFIG.address)
