@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+SRC_DIR = os.path.join(REPO_ROOT, "src")
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+from ptouch_bt import ConnectionConfig, format_status, read_status
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Read Brother P-touch status over RFCOMM.")
+    parser.add_argument("--device", default=ConnectionConfig.device)
+    parser.add_argument("--address", default=ConnectionConfig.address)
+    parser.add_argument("--channel", type=int, default=ConnectionConfig.channel)
+    parser.add_argument("--timeout", type=float, default=2.0)
+    parser.add_argument("--hex-only", action="store_true")
+    args = parser.parse_args()
+
+    try:
+        status = read_status(ConnectionConfig(args.address, args.channel, args.device), args.timeout)
+    except Exception as error:
+        print(error, file=sys.stderr)
+        return 1
+
+    if args.hex_only:
+        print(status.raw.hex())
+    else:
+        print(format_status(status))
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

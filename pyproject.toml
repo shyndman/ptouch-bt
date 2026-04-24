@@ -1,0 +1,14 @@
+[project]
+name = "ptouch-bt"
+version = "0.0.0"
+description = "Bluetooth Classic RFCOMM tools for Brother P-touch printers"
+requires-python = ">=3.10"
+readme = "README.md"
+authors = [
+    { name = "Scott Hyndman", email = "scotty.hyndman@gmail.com" }
+]
+dependencies = ["Pillow>=10"]
+
+[build-system]
+requires = ["uv_build>=0.9.27,<0.10.0"]
+build-backend = "uv_build"
