@@ -11,17 +11,23 @@ if SRC_DIR not in sys.path:
 from ptouch_bt import ConnectionConfig, format_status, read_status
 
 
+DEFAULT_CONFIG = ConnectionConfig()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Read Brother P-touch status over RFCOMM.")
-    parser.add_argument("--device", default=ConnectionConfig.device)
-    parser.add_argument("--address", default=ConnectionConfig.address)
-    parser.add_argument("--channel", type=int, default=ConnectionConfig.channel)
+    parser.add_argument("--device", default=DEFAULT_CONFIG.device)
+    parser.add_argument("--address", default=DEFAULT_CONFIG.address)
+    parser.add_argument("--channel", type=int, default=DEFAULT_CONFIG.channel)
     parser.add_argument("--timeout", type=float, default=2.0)
     parser.add_argument("--hex-only", action="store_true")
     args = parser.parse_args()
 
     try:
-        status = read_status(ConnectionConfig(args.address, args.channel, args.device), args.timeout)
+        status = read_status(
+            ConnectionConfig(address=args.address, channel=args.channel, device=args.device),
+            args.timeout,
+        )
     except Exception as error:
         print(error, file=sys.stderr)
         return 1
