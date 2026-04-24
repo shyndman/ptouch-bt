@@ -15,7 +15,7 @@ DEFAULT_CONFIG = ConnectionConfig()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Read Brother P-touch status over RFCOMM.")
+    parser = argparse.ArgumentParser(description="Read status from your Brother P-touch over Bluetooth on Linux.")
     parser.add_argument("--device", default=DEFAULT_CONFIG.device)
     parser.add_argument("--address", default=DEFAULT_CONFIG.address)
     parser.add_argument("--channel", type=int, default=DEFAULT_CONFIG.channel)

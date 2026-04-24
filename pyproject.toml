@@ -1,7 +1,7 @@
 [project]
 name = "ptouch-bt"
 version = "0.0.0"
-description = "Bluetooth Classic RFCOMM tools for Brother P-touch printers"
+description = "Use Brother P-touch label printers over Bluetooth on Linux"
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [{name = "Scott Hyndman", email = "scotty.hyndman@gmail.com"}]
