@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: ptouch-bt
-Version: 0.1.0
-Summary: Bluetooth Classic RFCOMM tools for Brother P-touch printers
-Requires-Python: >=3.10
-Requires-Dist: Pillow>=10
