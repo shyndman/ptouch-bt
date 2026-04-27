@@ -16,6 +16,7 @@ from ptouch_bt import (
   Status,
   build_image_print_job,
   build_print_job,
+  build_test_image,
   build_test_print_job,
   build_text_print_job,
   format_status,
@@ -99,19 +100,30 @@ class ProtocolTests(unittest.TestCase):
     )
 
   def test_default_test_job_matches_proven_minimal_stream_shape(self):
-    job = build_test_print_job(finalize=FinalizeMode.CHAIN)
+    job = build_test_print_job(tape_width_px(12), finalize=FinalizeMode.CHAIN)
 
-    self.assertEqual(job.chunk_count, 28)
-    self.assertEqual(job.byte_count, 589)
+    self.assertEqual(job.image.size, (92, 41))
+    self.assertEqual(job.chunk_count, 96)
+    self.assertEqual(job.byte_count, 1949)
     self.assertEqual(job.chunks[0], (b"\x00" * 100) + b"\x1b\x40")
     self.assertEqual(job.chunks[1].hex(), "4d02")
     self.assertEqual(job.chunks[2].hex(), "1b695201")
     self.assertEqual(job.chunks[-1].hex(), "0c")
 
   def test_feed_cut_finalize_byte(self):
-    job = build_test_print_job(finalize=FinalizeMode.FEED_CUT)
+    job = build_test_print_job(tape_width_px(12), finalize=FinalizeMode.FEED_CUT)
 
     self.assertEqual(job.chunks[-1].hex(), "1a")
+
+  def test_test_image_crops_bottom_without_scaling(self):
+    image = build_test_image(tape_width_px(4))
+
+    self.assertEqual(image.size, (92, 24))
+
+  def test_test_image_keeps_full_height_when_tape_allows_it(self):
+    image = build_test_image(tape_width_px(12))
+
+    self.assertEqual(image.size, (92, 41))
 
   def test_text_and_image_share_print_job_path(self):
     text_image = render_text_image("Test", tape_width_px(12))
@@ -213,16 +225,15 @@ class ProtocolTests(unittest.TestCase):
     self.assertEqual(prepared.image.mode, "1")
     self.assertEqual(prepared.image.size[1], 76)
 
-  def test_printer_preview_test_rejects_tall_mark_for_loaded_tape(self):
+  def test_printer_preview_test_uses_live_tape_width(self):
     status = Status.from_bytes(
       bytes.fromhex("802042307630000000000c010000000000000000000000000108000000000000")
     )
 
     with patch.object(PTouchPrinter, "status", return_value=status):
-      with self.assertRaisesRegex(
-        ValueError, "mark height 77px exceeds current tape printable width 76px"
-      ):
-        PTouchPrinter().preview_test(mark_height=77)
+      prepared = PTouchPrinter().preview_test()
+
+    self.assertEqual(prepared.image.size, (92, 41))
 
 
 if __name__ == "__main__":

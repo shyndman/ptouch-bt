@@ -127,6 +127,18 @@ class CliTests(unittest.TestCase):
     self.assertIn("finalize:     feed/cut 0x1a", result.output)
     self.assertEqual(print_text.call_args.kwargs["finalize"], FinalizeMode.FEED_CUT)
 
+  def test_test_command_prints_without_shape_args(self):
+    with patch.object(
+      PTouchPrinter,
+      "print_test",
+      autospec=True,
+      return_value=sample_result(),
+    ) as print_test:
+      result = self.runner.invoke(cli, ["print", "test"])
+
+    self.assertEqual(result.exit_code, 0)
+    self.assertEqual(print_test.call_args.kwargs["finalize"], FinalizeMode.FEED_CUT)
+
 
 if __name__ == "__main__":
   unittest.main()

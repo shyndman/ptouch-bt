@@ -129,13 +129,9 @@ class PTouchPrinter:
 
   def preview_test(
     self,
-    columns: int = 24,
-    mark_width: int = 8,
-    mark_height: int = 8,
   ) -> PreparedImage:
     def build_image(tape_width: int) -> PILImage:
-      self._validate_test_height(mark_height, tape_width)
-      return build_test_image(columns, mark_width, mark_height)
+      return build_test_image(tape_width)
 
     return self._prepare(build_image)
 
@@ -170,16 +166,10 @@ class PTouchPrinter:
     return self._print(build_image, finalize)
 
   def print_test(
-    self,
-    columns: int = 24,
-    mark_width: int = 8,
-    mark_height: int = 8,
-    *,
-    finalize: FinalizeMode = FinalizeMode.FEED_CUT,
+    self, *, finalize: FinalizeMode = FinalizeMode.FEED_CUT
   ) -> PrintResult:
     def build_image(tape_width: int) -> PILImage:
-      self._validate_test_height(mark_height, tape_width)
-      return build_test_image(columns, mark_width, mark_height)
+      return build_test_image(tape_width)
 
     return self._print(build_image, finalize)
 
@@ -218,10 +208,4 @@ class PTouchPrinter:
         byte_count=byte_count,
         chunk_count=chunk_count,
         finalize=job.finalize,
-      )
-
-  def _validate_test_height(self, mark_height: int, tape_width: int) -> None:
-    if mark_height > tape_width:
-      raise ValueError(
-        f"mark height {mark_height}px exceeds current tape printable width {tape_width}px"
       )

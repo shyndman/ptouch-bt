@@ -1,4 +1,5 @@
 from enum import Enum
+from importlib.resources import files
 from pathlib import Path
 from collections.abc import Iterable, Iterator
 from typing import BinaryIO, Callable, ClassVar, Protocol, TypeAlias, cast
@@ -12,6 +13,7 @@ MAX_PIXELS = 128
 RASTER_BYTES = MAX_PIXELS // 8
 DEFAULT_FONT = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
 DEFAULT_TEXT_FONT_SIZE = 18
+TEST_IMAGE = files("ptouch_bt.assets").joinpath("test.png")
 TAPE_WIDTHS_PX = {
   4: 24,
   6: 32,
@@ -158,6 +160,20 @@ def monochrome_image(
   return point(threshold_pixel, "1")
 
 
+def crop_to_tape_height(image: PILImage, tape_width: int) -> PILImage:
+  if tape_width < 1:
+    raise ValueError("tape width must be at least 1px")
+
+  width, height = image.size
+  if width < 1 or height < 1:
+    raise ValueError("image must not be empty")
+
+  printable_height = min(tape_width, MAX_PIXELS)
+  if height <= printable_height:
+    return image
+  return image.crop((0, 0, width, printable_height))
+
+
 def prepare_image(
   source: ImageSource,
   tape_width: int,
@@ -229,30 +245,19 @@ def write_print_job(fd: int, chunks: Iterable[bytes]) -> tuple[int, int]:
   return byte_count, chunk_count
 
 
-def build_test_image(
-  columns: int = 24, mark_width: int = 8, mark_height: int = 8
-) -> PILImage:
-  if columns < 1:
-    raise ValueError("columns must be at least 1")
-  if mark_width < 1 or mark_width > columns:
-    raise ValueError("mark_width must be between 1 and columns")
-  if mark_height < 1 or mark_height > MAX_PIXELS:
-    raise ValueError(f"mark_height must be between 1 and {MAX_PIXELS}")
-
-  image = Image.new("1", (columns, mark_height), 1)
-  draw = ImageDraw.Draw(image)
-  mark_start = (columns - mark_width) // 2
-  draw.rectangle((mark_start, 0, mark_start + mark_width - 1, mark_height - 1), fill=0)
-  return image
+def build_test_image(tape_width: int) -> PILImage:
+  with TEST_IMAGE.open("rb") as handle:
+    with Image.open(handle) as image:
+      image = grayscale_image(image.copy())
+  image = crop_to_tape_height(image, tape_width)
+  return monochrome_image(image, dither=False)
 
 
 def build_test_print_job(
-  columns: int = 24,
-  mark_width: int = 8,
-  mark_height: int = 8,
+  tape_width: int,
   finalize: FinalizeMode = FinalizeMode.CHAIN,
 ) -> PrintJob:
-  return build_print_job(build_test_image(columns, mark_width, mark_height), finalize)
+  return build_print_job(build_test_image(tape_width), finalize)
 
 
 def build_text_print_job(
