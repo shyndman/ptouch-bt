@@ -1,6 +1,7 @@
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -11,6 +12,7 @@ from ptouch_bt import (
   LabelColor,
   MediaType,
   PTouchPrinter,
+  PreparedImage,
   Status,
   build_image_print_job,
   build_print_job,
@@ -48,8 +50,18 @@ class ProtocolTests(unittest.TestCase):
     self.assertEqual(status.text_color_name, "black")
 
     formatted = format_status(status)
-    self.assertIn("media_mm:     12", formatted)
-    self.assertIn("media_kind:   laminate", formatted)
+    self.assertIn("Printer status", formatted)
+    self.assertIn("Tape width:    12 mm", formatted)
+    self.assertIn("Tape type:     Laminate", formatted)
+    self.assertNotIn("Raw:", formatted)
+
+    debug_formatted = format_status(status, debug=True)
+    self.assertIn("Tape width:    12 mm (0x0c)", debug_formatted)
+    self.assertIn("Errors:        None (0x00 0x00)", debug_formatted)
+    self.assertIn(
+      "Raw:           802042307630000000000c010000000000000000000000000108000000000000",
+      debug_formatted,
+    )
 
   def test_status_and_config_are_pydantic_models(self):
     raw = bytes.fromhex(
@@ -187,6 +199,30 @@ class ProtocolTests(unittest.TestCase):
     self.assertEqual(job.image.size, (50, 76))
     self.assertEqual(job.chunks[-1].hex(), "1a")
     self.assertEqual(job.model_dump()["finalize"], FinalizeMode.FEED_CUT)
+
+  def test_printer_previews_text_using_live_tape_width(self):
+    status = Status.from_bytes(
+      bytes.fromhex("802042307630000000000c010000000000000000000000000108000000000000")
+    )
+
+    with patch.object(PTouchPrinter, "status", return_value=status):
+      prepared = PTouchPrinter().preview_text("Text")
+
+    self.assertIsInstance(prepared, PreparedImage)
+    self.assertEqual(prepared.status.media_width_mm, 12)
+    self.assertEqual(prepared.image.mode, "1")
+    self.assertEqual(prepared.image.size[1], 76)
+
+  def test_printer_preview_test_rejects_tall_mark_for_loaded_tape(self):
+    status = Status.from_bytes(
+      bytes.fromhex("802042307630000000000c010000000000000000000000000108000000000000")
+    )
+
+    with patch.object(PTouchPrinter, "status", return_value=status):
+      with self.assertRaisesRegex(
+        ValueError, "mark height 77px exceeds current tape printable width 76px"
+      ):
+        PTouchPrinter().preview_test(mark_height=77)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,10 @@ description = "Use Brother P-touch label printers over Bluetooth on Linux"
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [{name = "Scott Hyndman", email = "scotty.hyndman@gmail.com"}]
-dependencies = ["Pillow>=10", "pydantic>=2.13.3"]
+dependencies = ["click>=8.1", "Pillow>=10", "pydantic>=2.13.3"]
+
+[project.scripts]
+ptouch = "ptouch_bt.cli.main:cli"
 
 [build-system]
 requires = ["uv_build>=0.9.27,<0.10.0"]

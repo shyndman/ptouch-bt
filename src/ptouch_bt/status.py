@@ -140,23 +140,48 @@ def read_status(config: ConnectionConfig, timeout: float = 2.0) -> Status:
     return request_status(fd, timeout)
 
 
-def format_status(status: Status) -> str:
+def _title_case(value: str) -> str:
+  return value.replace("_", " ").title()
+
+
+def _decode_model(model: bytes) -> str:
+  text = model.decode("ascii", errors="replace").strip()
+  return text or model.hex()
+
+
+def format_status(status: Status, debug: bool = False) -> str:
+  lines = [
+    "Printer status",
+    "",
+    f"Model:         {_decode_model(status.model)}",
+    f"Tape width:    {status.media_width_mm} mm",
+    f"Tape type:     {_title_case(status.media_type_name)}",
+    f"Tape color:    {_title_case(status.media_color_name)}",
+    f"Text color:    {_title_case(status.text_color_name)}",
+  ]
+
+  if status.has_error:
+    error_summary = "Yes"
+  else:
+    error_summary = "None"
+
+  lines.append(f"Errors:        {error_summary}")
+
+  if not debug:
+    return "\n".join(lines)
+
   return "\n".join(
     [
-      f"raw:          {status.raw.hex()}",
-      f"length:       {len(status.raw)}",
-      f"header:       {status.header.hex()}",
-      f"marker:       {status.marker.hex()}",
-      f"model:        {status.model.hex()}",
-      f"error_1:      0x{status.error_1:02x}",
-      f"error_2:      0x{status.error_2:02x}",
-      f"media_width:  0x{status.media_width:02x}",
-      f"media_mm:     {status.media_width_mm}",
-      f"media_type:   0x{status.media_type:02x}",
-      f"media_kind:   {status.media_type_name}",
-      f"media_color:  0x{status.media_color:02x}",
-      f"media_name:   {status.media_color_name}",
-      f"text_color:   0x{status.text_color:02x}",
-      f"text_name:    {status.text_color_name}",
+      *lines[:2],
+      f"Model:         {_decode_model(status.model)} (0x{status.model.hex()})",
+      f"Tape width:    {status.media_width_mm} mm (0x{status.media_width:02x})",
+      f"Tape type:     {_title_case(status.media_type_name)} (0x{status.media_type:02x})",
+      f"Tape color:    {_title_case(status.media_color_name)} (0x{status.media_color:02x})",
+      f"Text color:    {_title_case(status.text_color_name)} (0x{status.text_color:02x})",
+      f"Errors:        {error_summary} (0x{status.error_1:02x} 0x{status.error_2:02x})",
+      "",
+      f"Header:        0x{status.header.hex()}",
+      f"Marker:        0x{status.marker.hex()}",
+      f"Raw:           {status.raw.hex()}",
     ]
   )
