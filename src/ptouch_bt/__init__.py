@@ -1,4 +1,4 @@
-from .client import PTouchPrinter, PrintResult
+from .client import PTouchPrinter, PreparedImage, PrintResult
 from .media import (
   LabelColor,
   MediaType,
@@ -51,6 +51,7 @@ __all__ = [
   "LabelColor",
   "MediaType",
   "PTouchPrinter",
+  "PreparedImage",
   "PrintJob",
   "PrintResult",
   "STATUS_COMMAND",

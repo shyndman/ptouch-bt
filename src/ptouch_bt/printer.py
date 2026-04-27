@@ -11,7 +11,7 @@ from .rfcomm import write_all
 MAX_PIXELS = 128
 RASTER_BYTES = MAX_PIXELS // 8
 DEFAULT_FONT = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
-DEFAULT_TEXT_FONT_SIZE = 22
+DEFAULT_TEXT_FONT_SIZE = 18
 TAPE_WIDTHS_PX = {
   4: 24,
   6: 32,

@@ -7,7 +7,7 @@ import termios
 import time
 import tty
 from contextlib import contextmanager
-from collections.abc import Iterator
+from collections.abc import Generator
 from typing import ClassVar, TypeAlias
 
 from pydantic import BaseModel, ConfigDict
@@ -174,7 +174,9 @@ def write_all(fd: FileDescriptor, data: ByteBuffer) -> None:
 
 
 @contextmanager
-def ptouch_connection(config: ConnectionConfig) -> Iterator[FileDescriptor]:
+def ptouch_connection(
+  config: ConnectionConfig,
+) -> Generator[FileDescriptor, None, None]:
   connection = start_rfcomm(config)
   fd: FileDescriptor | None = None
   old_attrs = None
